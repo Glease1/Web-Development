@@ -1,0 +1,14 @@
+# SQLite database — auto-created on first run, do not commit
+database/*.db
+database/*.db-shm
+database/*.db-wal
+
+# PHP logs
+*.log
+error_log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
