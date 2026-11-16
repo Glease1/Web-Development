@@ -1,6 +1,6 @@
 # Meridian Horizons
 
-A travel agency website built from scratch with **PHP 8, SQLite, session-based basket and a role-based admin panel** — no framework, no Composer, no npm. It is a complete demonstration application, not a production service.
+A framework-free travel booking application — PHP 8.3, SQLite, session-based basket, role-based admin, and a complete demo booking flow. Zero external dependencies: no framework, no Composer, no npm. It is a **development/demo application**, not a production travel agency.
 
 ## Tech stack
 
@@ -9,19 +9,24 @@ A travel agency website built from scratch with **PHP 8, SQLite, session-based b
 | Backend | PHP 8.3 — front-controller routing, PDO, session management, CSRF protection |
 | Database | SQLite 3 via PDO — zero-config, auto-created and seeded on first run |
 | Frontend | Vanilla CSS design system (Playfair Display + Inter), vanilla JS price calculator |
-| Deployment | PHP-FPM or another production PHP runtime behind a TLS reverse proxy |
+| Deployment | Ansible `website` role → systemd service on port 8080 |
 
 ## Getting started
 
-Requires PHP 8.1+ with the `pdo_sqlite` extension (enabled by default in standard PHP builds).
+Requires PHP 8.1+ with the `pdo_sqlite` extension (enabled by default in standard PHP builds). `mbstring` is optional; the one-letter avatar uses a fallback.
 
 ```bash
-git clone <your-repo-url>
-cd Web-Development
+cd "Website Example"
 php -S localhost:8080 -t public
 ```
 
-Open **http://localhost:8080** — the SQLite database is created and seeded automatically on first request.
+Open **http://localhost:8080**. The SQLite database is created outside the web root at `../meridian-data/meridian.db` and seeded on first request. Override the location with `MERIDIAN_DB_PATH`:
+
+```bash
+MERIDIAN_DB_PATH=/var/lib/meridian/meridian.db php -S localhost:8080 -t public
+```
+
+**Do not serve the project root.** The `public/` directory is the document root. Serving the project root exposes `config/`, `src/`, `includes/`, and the legacy `database/` directory.
 
 ## Demo credentials
 
@@ -46,9 +51,7 @@ Open **http://localhost:8080** — the SQLite database is created and seeded aut
   - Airport lounge access
   - Economy Plus or Business Class flight upgrades
   - Professional photography sessions (luxury tier)
-- Session-based basket — works before login, merged on checkout
-- "You May Also Like" destination recommendations
-- Sticky footer with ABTA & ATOL branding
+- Session-based basket — works before login; checkout requires an account so a booking is never silently discarded
 - FAQ, Terms, Privacy, Cookie Policy, Contact, About pages
 
 ### Admin panel
@@ -66,6 +69,8 @@ Open **http://localhost:8080** — the SQLite database is created and seeded aut
 - XSS-safe output via `htmlspecialchars` (`h()` helper) on all user-supplied data
 - Passwords hashed with `password_hash()` (bcrypt, cost 12)
 - Admin routes guarded by role check
+- Database and application config live outside `public/`
+- Session cookies use `HttpOnly`, `SameSite=Lax`, and `Secure` when HTTPS is detected (or `MERIDIAN_COOKIE_SECURE=1`)
 
 ## Project structure
 
@@ -91,52 +96,30 @@ pages/
   search_results.php
   about.php / contact.php / faq.php / terms.php / privacy.php / cookies.php
 public/
+  index.php                  Public front controller (requires ../index.php)
   style.css                  Complete CSS design system (~2200 lines)
-database/                    SQLite .db file (gitignored — auto-created on first run)
+database/                    Legacy location only; .htaccess denies it if the root is ever exposed
+../meridian-data/            SQLite database outside the web root (created on first run)
 ```
 
 ## Resetting the database
 
-```bash
-rm "database/meridian.db"
-```
+Stop the service, remove the database at `../meridian-data/meridian.db` (or the path in `MERIDIAN_DB_PATH`), then reload. The schema and demo data are recreated on the next request.
 
-Reload the site — the database is recreated and re-seeded automatically.
+```bash
+rm "../meridian-data/meridian.db"
+```
 
 ## Deployment
 
-Deploy the application with a production PHP runtime behind a TLS-terminating reverse
-proxy. Configure the web server document root as `public/`; the application, SQLite
-database, and configuration files must remain outside the publicly served directory.
+The site is deployed automatically by the Ansible `website` role in this repository. The role installs PHP 8.3, creates a `/opt/meridian` symlink, creates `~/meridian-data`, and manages a systemd service (`meridian`) that serves `public/` on port 8080 with `MERIDIAN_DB_PATH` pointing outside the web root.
+
+See [Ansible/readme.md](../Ansible/readme.md) for full deployment instructions.
 
 ## Production hardening notes
 
-- Keep the web server document root set to `public/`; it must not serve the repository root
-- Set `session.cookie_secure = 1` and `session.cookie_httponly = 1` in `php.ini`
-- Replace the seed admin account with a proper setup CLI before any public-facing deployment
-- Use a production web server (nginx + php-fpm) instead of the PHP built-in server
-
----
-
-## Running it
-
-Serve **`public/`** as the document root, never the project root:
-
-```bash
-php -S 127.0.0.1:8080 -t public
-```
-
-The SQLite database lives in `database/meridian.db`, which is **outside** `public/` and therefore not reachable over HTTP. Do not move it into the docroot.
-
-## Security notes
-
-- PDO prepared statements throughout; output escaped with `h()`; CSRF tokens on every POST.
-- The admin area is gated by `requireAuth` + `requireRole('admin')`.
-- The database, `config/`, `src/` and `includes/` sit outside the document root.
-- Login throttling is **not** implemented, and demo accounts are seeded. Remove them before exposing this to anyone.
-
-## Limitations
-
-- A demonstration application, not a production service: `php -S` is a development server, there is no TLS, no rate limiting, no monitoring and no automated test suite.
-- Contact, newsletter and forgot-password handlers flash a message rather than sending mail; they are UI placeholders.
-- No framework experience is claimed from this project — it is deliberately framework-free.
+- The database is outside the document root by default; keep it there.
+- Set `MERIDIAN_COOKIE_SECURE=1` when serving over HTTPS (the app auto-detects direct HTTPS).
+- Replace the seed admin account with a proper setup CLI before any public-facing deployment.
+- Move from `php -S` to nginx + PHP-FPM with `public/` as the document root; the built-in server is for local development only.
+- Add login rate limiting and a backup/restore process before exposing the app.

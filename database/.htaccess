@@ -1,0 +1,11 @@
+# Defence in depth: this directory must never be served by a web server.
+# The supported deployment uses public/ as the document root and keeps the
+# database outside the application tree; this file protects a misconfigured
+# Apache document root as well.
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+</IfModule>

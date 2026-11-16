@@ -10,11 +10,10 @@
           <span class="site-logo__primary">Meridian</span>
           <span class="site-logo__secondary">Horizons</span>
         </a>
-        <p>Crafting extraordinary journeys for discerning travellers since 2003. Fully independent, ABTA &amp; ATOL protected.</p>
+        <p>A demonstration travel booking application. Not a trading travel agency and not affiliated with any tour operator.</p>
         <div class="badges">
-          <span class="footer-badge">ABTA Protected</span>
-          <span class="footer-badge">ATOL Bonded</span>
-          <span class="footer-badge">Est. 2003</span>
+          <span class="footer-badge">Demo application</span>
+          <span class="footer-badge">No live bookings</span>
         </div>
       </div>
 
@@ -62,7 +61,7 @@
 
   <div class="container">
     <div class="footer-bottom">
-      <p>&copy; <?= date('Y') ?> Meridian Horizons Ltd. All rights reserved. Registered in England &amp; Wales No. 04812376.</p>
+      <p>&copy; <?= date('Y') ?> Meridian Horizons demo. Not a registered company.</p>
       <div style="display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;">
         <div style="display:flex;gap:1rem;font-size:.78rem;">
           <a href="/?page=terms">Terms</a>
@@ -107,9 +106,9 @@
 <div class="footer-sticky" aria-hidden="true">
   <span class="footer-sticky__brand">Meridian Horizons</span>
   <span class="footer-sticky__sep">&#8212;</span>
-  <span class="footer-sticky__copy">&copy; <?= date('Y') ?> &nbsp;Extraordinary journeys since 2003</span>
+  <span class="footer-sticky__copy">&copy; <?= date('Y') ?> &nbsp;Meridian Horizons demo</span>
   <span class="footer-sticky__sep">&#183;</span>
-  <span class="footer-sticky__badge">ABTA &amp; ATOL Protected</span>
+  <span class="footer-sticky__badge">Demo — not a travel agency</span>
 </div>
 
 </body>

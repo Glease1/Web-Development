@@ -10,6 +10,22 @@ if (preg_match('#^/(database|config|src|includes)(/|$)#i', $_uri)) {
     exit('Forbidden');
 }
 
+// Harden the session cookie before the session starts. Secure is automatic on
+// HTTPS and can be forced with MERIDIAN_COOKIE_SECURE=1 behind a TLS proxy.
+$https = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+    || (($_SERVER['SERVER_PORT'] ?? '') === '443');
+$cookieSecure = filter_var(
+    getenv('MERIDIAN_COOKIE_SECURE') ?: ($https ? '1' : '0'),
+    FILTER_VALIDATE_BOOLEAN
+);
+session_set_cookie_params([
+    'lifetime' => 0,
+    'path'     => '/',
+    'secure'   => $cookieSecure,
+    'httponly' => true,
+    'samesite' => 'Lax',
+]);
+ini_set('session.use_strict_mode', '1');
 session_start();
 
 define('ROOT_PATH', __DIR__);

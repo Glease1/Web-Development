@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="auth-form">
       <h1>Create Your Account</h1>
-      <p class="lead">Join 50,000 travellers who trust Meridian with their adventures.</p>
+      <p class="lead">Create a demo account to try the booking flow.</p>
 
       <?php renderFlash(); ?>
 

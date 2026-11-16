@@ -105,7 +105,7 @@ $luxury = [
     <div class="animate-in">
       <div class="hero__badge">
         <span class="hero__badge-dot"></span>
-        Award-winning bespoke travel since 2003
+        A framework-free PHP booking demo
       </div>
     </div>
 
@@ -166,19 +166,19 @@ $luxury = [
     <div class="hero__trust animate-in animate-in--delay-3">
       <span class="hero__trust-item">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        ABTA &amp; ATOL Protected
+        Framework-free PHP demo
       </span>
       <span class="hero__trust-item">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-        50,000+ Happy Travellers
+        26 seeded destinations
       </span>
       <span class="hero__trust-item">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        Est. 2003
+        SQLite + PDO
       </span>
       <span class="hero__trust-item">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-        120+ Countries
+        CSRF-protected forms
       </span>
     </div>
   </div>
@@ -346,7 +346,7 @@ $luxury = [
           </svg>
         </div>
         <h3>Fully Protected &amp; Bonded</h3>
-        <p>Every booking is covered under ABTA and ATOL. Your money is safe, whatever happens.</p>
+        <p>This is a demonstration application. It does not sell travel and is not ABTA or ATOL protected.</p>
       </div>
 
       <div class="usp-item">

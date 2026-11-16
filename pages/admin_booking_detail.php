@@ -159,7 +159,7 @@ $ref          = 'MH-' . str_pad((string)$bookingId, 5, '0', STR_PAD_LEFT);
           <h3 style="font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:1.25rem;">Customer</h3>
           <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.25rem;padding-bottom:1.25rem;border-bottom:1px solid var(--border-light);">
             <div style="width:46px;height:46px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <span style="font-family:var(--font-serif);font-size:1.1rem;color:var(--gold);font-weight:700;"><?= h(strtoupper(substr(trim((string)$booking['user_name']), 0, 1))) ?></span>
+              <span style="font-family:var(--font-serif);font-size:1.1rem;color:var(--gold);font-weight:700;"><?= h(initial((string)$booking['user_name'])) ?></span>
             </div>
             <div>
               <div style="font-weight:700;font-size:1rem;color:var(--navy);"><?= h($booking['user_name']) ?></div>

@@ -9,6 +9,21 @@ function h(string $value): string
     return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
+/** Return one visible initial without requiring mbstring. */
+function initial(string $value): string
+{
+    $value = trim($value);
+    if ($value === '') {
+        return '?';
+    }
+    $first = function_exists('mb_substr')
+        ? mb_substr($value, 0, 1, 'UTF-8')
+        : substr($value, 0, 1);
+    return function_exists('mb_strtoupper')
+        ? mb_strtoupper($first, 'UTF-8')
+        : strtoupper($first);
+}
+
 /** Format a price as a GBP string (e.g. £2,450). */
 function formatPrice(float $price): string
 {

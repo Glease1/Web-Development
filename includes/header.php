@@ -33,7 +33,7 @@ $pageTitle = match($currentPage) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Meridian Horizons — Award-winning bespoke travel experiences crafted around you. Luxury itineraries to over 120 countries since 2003.">
+  <meta name="description" content="Meridian Horizons — a framework-free PHP and SQLite travel booking demo.">
   <title><?= h($pageTitle) ?> &mdash; Meridian Horizons</title>
 
   <!-- Fonts -->

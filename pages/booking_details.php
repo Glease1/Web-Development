@@ -288,22 +288,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && post('action') === 'add_to_basket')
     $weeksOut        = (int) floor($daysToDepart / 7);
     $depositPct      = $weeksOut >= 21 ? 10 : ($weeksOut >= 14 ? 25 : 50);
     $groupSurcharge  = $passengers >= 6 ? round((float)$dest['price'] * 0.10, 2) : 0.0;
+
+    // Validate selected add-ons against the server-side list, never the POSTed price.
+    $addonById = [];
+    foreach ($addons as $addon) {
+        $addonById[(string) $addon['id']] = $addon;
+    }
+    $selectedAddonIds = [];
+    $addonPerPerson   = 0.0;
+    foreach ((array) ($_POST['addons'] ?? []) as $requestedId) {
+        if (!is_string($requestedId) || !isset($addonById[$requestedId])) {
+            continue;
+        }
+        $selectedAddonIds[] = $requestedId;
+        $addonPerPerson += (float) $addonById[$requestedId]['price'];
+    }
+
     if (!isset($_SESSION['basket'])) {
         $_SESSION['basket'] = [];
     }
     $_SESSION['basket'][] = [
-        'key'             => uniqid('bk_', true),
-        'destination_id'  => (int)$dest['id'],
-        'name'            => $dest['name'],
-        'country'         => $dest['country'],
-        'image_url'       => $dest['image_url'],
-        'duration_days'   => (int)$dest['duration_days'],
-        'price'           => (float)$dest['price'],
-        'group_surcharge' => $groupSurcharge,
-        'passengers'      => $passengers,
-        'travel_date'     => $travelDate,
-        'deposit_pct'     => $depositPct,
-        'notes'           => $notes,
+        'key'              => uniqid('bk_', true),
+        'destination_id'   => (int)$dest['id'],
+        'name'             => $dest['name'],
+        'country'          => $dest['country'],
+        'image_url'        => $dest['image_url'],
+        'duration_days'    => (int)$dest['duration_days'],
+        'price'            => (float)$dest['price'],
+        'group_surcharge'  => $groupSurcharge,
+        'addon_ids'        => $selectedAddonIds,
+        'addon_per_person' => $addonPerPerson,
+        'passengers'       => $passengers,
+        'travel_date'      => $travelDate,
+        'deposit_pct'      => $depositPct,
+        'notes'            => $notes,
     ];
     flash('success', h($dest['name']) . ' added to your basket.');
     redirect('basket');
@@ -468,7 +486,7 @@ if (!empty($dest['highlights'])) {
       <div style="display:flex;flex-direction:column;gap:.6rem;">
         <div style="display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:var(--text-muted);">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--success-text)" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          ABTA &amp; ATOL Protected
+          Demo application — no travel is sold
         </div>
         <div style="display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:var(--text-muted);">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--success-text)" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>

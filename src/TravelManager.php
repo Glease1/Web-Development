@@ -269,25 +269,81 @@ class TravelManager
 
     // ───────────────────────── BOOKINGS ─────────────────────────
 
-    public function createBooking(int $userId, int $destinationId, string $travelDate, int $passengers, string $notes = ''): bool
-    {
+    public function createBooking(
+        int $userId,
+        int $destinationId,
+        string $travelDate,
+        int $passengers,
+        string $notes = '',
+        array $addonIds = [],
+        float $addonPerPerson = 0.0,
+        int $depositPct = 10
+    ): bool {
         $dest = $this->getDestinationById($destinationId);
         if ($dest === null) {
             return false;
         }
-        $total = (float) $dest['price'] * $passengers;
-        $stmt  = $this->db->prepare(
-            'INSERT INTO bookings (user_id, destination_id, travel_date, passengers, total_price, notes)
-             VALUES (:uid, :did, :date, :pax, :total, :notes)'
+
+        $passengers     = max(1, min(12, $passengers));
+        $price          = (float) $dest['price'];
+        $groupSurcharge = $passengers >= 6 ? round($price * 0.10, 2) : 0.0;
+        $addonPerPerson = max(0.0, $addonPerPerson);
+        $depositPct     = in_array($depositPct, [10, 25, 50], true) ? $depositPct : 10;
+        $total          = ($price + $groupSurcharge + $addonPerPerson) * $passengers;
+        $addonIds       = array_values(array_filter($addonIds, 'is_string'));
+
+        $stmt = $this->db->prepare(
+            'INSERT INTO bookings
+                (user_id, destination_id, travel_date, passengers, total_price, notes,
+                 addons_json, group_surcharge, deposit_pct)
+             VALUES
+                (:uid, :did, :date, :pax, :total, :notes, :addons, :group, :deposit)'
         );
         return $stmt->execute([
-            ':uid'   => $userId,
-            ':did'   => $destinationId,
-            ':date'  => $travelDate,
-            ':pax'   => $passengers,
-            ':total' => $total,
-            ':notes' => $notes,
+            ':uid'     => $userId,
+            ':did'     => $destinationId,
+            ':date'    => $travelDate,
+            ':pax'     => $passengers,
+            ':total'   => $total,
+            ':notes'   => $notes,
+            ':addons'  => json_encode($addonIds, JSON_THROW_ON_ERROR),
+            ':group'   => $groupSurcharge,
+            ':deposit' => $depositPct,
         ]);
+    }
+
+    /**
+     * Persist a whole basket atomically. Returns false without clearing the
+     * caller's basket if any line fails.
+     */
+    public function createBookings(int $userId, array $items): bool
+    {
+        $this->db->beginTransaction();
+        try {
+            foreach ($items as $item) {
+                $ok = $this->createBooking(
+                    $userId,
+                    (int) ($item['destination_id'] ?? 0),
+                    (string) ($item['travel_date'] ?? ''),
+                    (int) ($item['passengers'] ?? 1),
+                    (string) ($item['notes'] ?? ''),
+                    (array) ($item['addon_ids'] ?? []),
+                    (float) ($item['addon_per_person'] ?? 0),
+                    (int) ($item['deposit_pct'] ?? 10)
+                );
+                if (!$ok) {
+                    throw new RuntimeException('A basket line could not be saved.');
+                }
+            }
+            $this->db->commit();
+            return true;
+        } catch (Throwable $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            error_log('[Meridian] Booking failed: ' . $e->getMessage());
+            return false;
+        }
     }
 
     public function getUserBookings(int $userId): array
@@ -333,7 +389,7 @@ class TravelManager
     public function getDashboardStats(): array
     {
         $revenue = $this->db->query(
-            "SELECT COALESCE(SUM(total_price),0) FROM bookings WHERE status != 'cancelled'"
+            "SELECT COALESCE(SUM(total_price),0) FROM bookings WHERE status = 'confirmed'"
         )->fetchColumn();
 
         return [

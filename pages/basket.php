@@ -4,10 +4,16 @@ if (!isset($_SESSION['basket'])) {
     $_SESSION['basket'] = [];
 }
 $items = $_SESSION['basket'];
-$total = array_sum(array_map(fn($i) => ((float)$i['price'] + (float)($i['group_surcharge'] ?? 0)) * (int)$i['passengers'], $items));
-$totalDeposit = array_sum(array_map(fn($i) =>
-    ((float)$i['price'] + (float)($i['group_surcharge'] ?? 0)) * (int)$i['passengers'] * ((int)($i['deposit_pct'] ?? 10) / 100),
-$items));
+$lineTotal = static function (array $i): float {
+    return ((float) $i['price']
+        + (float) ($i['group_surcharge'] ?? 0)
+        + (float) ($i['addon_per_person'] ?? 0)) * (int) $i['passengers'];
+};
+$total = array_sum(array_map($lineTotal, $items));
+$totalDeposit = array_sum(array_map(
+    static fn(array $i): float => $lineTotal($i) * ((int) ($i['deposit_pct'] ?? 10) / 100),
+    $items
+));
 
 // Handle actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -34,13 +40,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             flash('warning', 'Your basket is empty.');
             redirect('basket');
         }
-        // If DB is available and user is logged in, persist bookings
-        if ($tm && isLoggedIn()) {
-            $user = currentUser();
-            foreach ($items as $item) {
-                $tm->createBooking($user['id'], (int)$item['destination_id'], $item['travel_date'], (int)$item['passengers']);
-            }
+
+        // A booking must belong to an account. Previously a logged-out
+        // checkout cleared the basket and reported success without saving
+        // anything; now the basket is preserved and the user is sent to login.
+        if (!isLoggedIn()) {
+            $_SESSION['_return_to'] = 'basket';
+            flash('error', 'Please sign in or create an account to complete your booking.');
+            redirect('login');
         }
+        if (!$tm) {
+            flash('error', 'The booking service is temporarily unavailable. Your basket has been kept.');
+            redirect('basket');
+        }
+
+        $user = currentUser();
+        if (!$tm->createBookings((int) $user['id'], $items)) {
+            flash('error', 'We could not save your booking. Your basket has been kept; please try again.');
+            redirect('basket');
+        }
+
         $_SESSION['basket'] = [];
         flash('success', 'Your booking request has been received! A consultant will be in touch within one business day to confirm details and arrange payment.');
         redirect('home');
@@ -126,9 +145,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="booking-summary">
           <h3>Order Summary</h3>
           <?php foreach ($items as $item): ?>
-          <?php $summaryItemTotal = ((float)$item['price'] + (float)($item['group_surcharge'] ?? 0)) * (int)$item['passengers']; ?>
+          <?php $summaryItemTotal = $lineTotal($item); ?>
           <div class="summary-line">
-            <span class="summary-label" style="max-width:60%;"><?= h($item['name']) ?> &times;<?= (int)$item['passengers'] ?><?php if (!empty($item['group_surcharge'])): ?> <span style="font-size:.7rem;opacity:.65;">(group)</span><?php endif; ?></span>
+            <span class="summary-label" style="max-width:60%;"><?= h($item['name']) ?> &times;<?= (int)$item['passengers'] ?><?php if (!empty($item['group_surcharge'])): ?> <span style="font-size:.7rem;opacity:.65;">(group)</span><?php endif; ?><?php if (!empty($item['addon_ids'])): ?> <span style="font-size:.7rem;opacity:.65;">+ extras</span><?php endif; ?></span>
             <span class="summary-price"><?= formatPrice($summaryItemTotal) ?></span>
           </div>
           <?php endforeach; ?>
@@ -142,6 +161,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           </div>
           <p style="font-size:.75rem;color:var(--text-light);margin-top:.75rem;line-height:1.5;">Deposit calculated on your departure dates. Balance due 10 weeks before each trip. No payment is taken online — your consultant will arrange this.</p>
 
+          <?php if (!isLoggedIn()): ?>
+          <p style="font-size:.75rem;color:var(--text-muted);margin-top:.75rem;line-height:1.5;">You’ll be asked to sign in before the booking is saved. Your basket is kept.</p>
+          <?php endif; ?>
           <form method="post" action="/?page=basket" style="margin-top:1.5rem;">
             <?= csrfField() ?>
             <input type="hidden" name="action" value="checkout">

@@ -1,9 +1,53 @@
 <?php
 declare(strict_types=1);
 
-// SQLite database file — created & seeded automatically on first request.
-// To reset: delete database/meridian.db and reload the site.
-define('DB_PATH', dirname(__DIR__) . '/database/meridian.db');
+// SQLite database file. It must live OUTSIDE the web root.
+//
+// Default: one directory above the application root (for example
+// /home/<user>/meridian-data/meridian.db). Override with MERIDIAN_DB_PATH.
+// The legacy database/meridian.db is migrated once, on first boot, and then
+// the application uses only the new path.
+$dbPath = getenv('MERIDIAN_DB_PATH');
+if (!is_string($dbPath) || trim($dbPath) === '') {
+    $dbPath = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'meridian-data'
+        . DIRECTORY_SEPARATOR . 'meridian.db';
+}
+define('DB_PATH', $dbPath);
+
+/**
+ * Copy the old in-web-root database to the new path, using SQLite's own
+ * backup mechanism so a WAL file is included. Never delete the source.
+ */
+function _dbMigrateLegacyDatabase(): void
+{
+    $legacy = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'database'
+        . DIRECTORY_SEPARATOR . 'meridian.db';
+    if (file_exists(DB_PATH) || !is_file($legacy)) {
+        return;
+    }
+
+    $dir = dirname(DB_PATH);
+    if (!is_dir($dir) && !mkdir($dir, 0750, true) && !is_dir($dir)) {
+        throw new RuntimeException('Cannot create the database directory: ' . $dir);
+    }
+
+    try {
+        $source = new PDO('sqlite:' . $legacy, null, null, [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        ]);
+        $source->exec('VACUUM INTO ' . $source->quote(DB_PATH));
+        $source = null;
+        @chmod(DB_PATH, 0640);
+    } catch (Throwable $e) {
+        error_log('[Meridian] Database migration failed: ' . $e->getMessage());
+        throw new RuntimeException(
+            'The database could not be moved outside the web root. '
+            . 'Set MERIDIAN_DB_PATH to a writable path outside the document root.',
+            0,
+            $e
+        );
+    }
+}
 
 /**
  * Returns a singleton PDO connection to the SQLite database.
@@ -18,9 +62,15 @@ function getDbConnection(): PDO
 
     $dbDir = dirname(DB_PATH);
     if (!is_dir($dbDir)) {
-        mkdir($dbDir, 0755, true);
+        if (!mkdir($dbDir, 0750, true) && !is_dir($dbDir)) {
+            throw new RuntimeException('Cannot create the database directory: ' . $dbDir);
+        }
     }
+    @chmod($dbDir, 0750);
 
+    if (!file_exists(DB_PATH)) {
+        _dbMigrateLegacyDatabase();
+    }
     $isNew = !file_exists(DB_PATH);
 
     $pdo = new PDO('sqlite:' . DB_PATH, null, null, [
@@ -30,17 +80,17 @@ function getDbConnection(): PDO
     ]);
     $pdo->exec('PRAGMA foreign_keys = ON');
     $pdo->exec('PRAGMA journal_mode  = WAL');
+    @chmod(DB_PATH, 0640);
 
-    if ($isNew) {
-        _dbBootstrap($pdo);
-    }
+    // Always ensure the schema exists; only seed a brand-new database.
+    _dbBootstrap($pdo, $isNew);
 
     return $pdo;
 }
 
 // ── Internal: schema + seed (runs once on DB creation) ────────────────────
 
-function _dbBootstrap(PDO $pdo): void
+function _dbBootstrap(PDO $pdo, bool $seed = true): void
 {
     // Schema
     $pdo->exec(<<<'SQL'
@@ -77,6 +127,9 @@ function _dbBootstrap(PDO $pdo): void
             passengers     INTEGER NOT NULL DEFAULT 1,
             total_price    REAL    NOT NULL DEFAULT 0,
             notes          TEXT    NOT NULL DEFAULT '',
+            addons_json    TEXT    NOT NULL DEFAULT '[]',
+            group_surcharge REAL   NOT NULL DEFAULT 0,
+            deposit_pct    INTEGER NOT NULL DEFAULT 10,
             status         TEXT    NOT NULL DEFAULT 'pending',
             created_at     TEXT    NOT NULL DEFAULT (datetime('now')),
             FOREIGN KEY (user_id)        REFERENCES users(id)        ON DELETE SET NULL,
@@ -94,6 +147,12 @@ function _dbBootstrap(PDO $pdo): void
             FOREIGN KEY (destination_id) REFERENCES destinations(id) ON DELETE CASCADE
         );
     SQL);
+
+    _dbEnsureBookingColumns($pdo);
+
+    if (!$seed) {
+        return;
+    }
 
     // Demo accounts
     $userStmt = $pdo->prepare(
@@ -165,6 +224,30 @@ function _dbBootstrap(PDO $pdo): void
         [11, 24, '2026-08-01', 2,  5300.00,  'cancelled', '',                                                '2026-05-20 11:00:00'],
     ] as $b) {
         $bookStmt->execute($b);
+    }
+}
+
+/**
+ * Add booking columns introduced after the first release. SQLite has no
+ * "ADD COLUMN IF NOT EXISTS", so inspect the table first.
+ */
+function _dbEnsureBookingColumns(PDO $pdo): void
+{
+    $columns = [];
+    foreach ($pdo->query('PRAGMA table_info(bookings)')->fetchAll() as $column) {
+        $columns[] = $column['name'];
+    }
+
+    $required = [
+        'addons_json'     => "TEXT NOT NULL DEFAULT '[]'",
+        'group_surcharge' => 'REAL NOT NULL DEFAULT 0',
+        'deposit_pct'     => 'INTEGER NOT NULL DEFAULT 10',
+    ];
+
+    foreach ($required as $name => $definition) {
+        if (!in_array($name, $columns, true)) {
+            $pdo->exec('ALTER TABLE bookings ADD COLUMN ' . $name . ' ' . $definition);
+        }
     }
 }
 
@@ -333,3 +416,6 @@ function _destinationsSeed(): array
          'image_url'=>'https://images.unsplash.com/photo-1575408264798-b50b252663e6?auto=format&fit=crop&w=1600&q=85'],
     ];
 }
+
+
+

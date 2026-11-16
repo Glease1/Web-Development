@@ -23,13 +23,12 @@
     </span>
     <span>
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-      ABTA &amp; ATOL Protected
+      Demo application — not a travel contract
     </span>
   </div>
 
-  <h2>1. Your Contract</h2>
-  <p>These booking conditions, together with our <a href="/?page=privacy">Privacy Policy</a> and any information given to you before booking, form the basis of your contract with Meridian Horizons Ltd, registered in England and Wales (Company No. 04812376), with registered offices at 12 Queen Square, Bath, BA1 2HN ("<strong>we</strong>", "<strong>us</strong>", "<strong>Meridian</strong>").</p>
-  <p>By requesting a booking, the lead passenger accepts these conditions on behalf of all members of the party. A binding contract comes into existence when we issue your booking confirmation.</p>
+  <h2>1. About this demo</h2>
+  <p>This is a demonstration application. It does not sell travel, take payments, or form a contract with a real travel business. The pages below are illustrative sample terms, not legal advice.</p>
 
   <h2>2. Booking & Payment</h2>
   <p>To secure a booking, a deposit of between 15% and 25% of the total holiday cost (as specified at the time of booking) is required. The balance is due no later than <strong>56 days</strong> before your departure date. If you book within 56 days of departure, full payment is required at the time of booking.</p>
@@ -79,7 +78,7 @@
 
   <h2>11. Complaints</h2>
   <p>If you have cause for complaint whilst travelling, you must inform your local guide, hotel manager, or our in-destination representative immediately so that we have the opportunity to rectify the problem. If the issue is not resolved, it must be reported to us in writing within 28 days of your return date. We will acknowledge your complaint within 14 days and aim to provide a full response within 28 days.</p>
-  <p>If your complaint cannot be resolved, you may refer it to ABTA arbitration. Details are available at <a href="https://www.abta.com" target="_blank" rel="noopener">abta.com</a>.</p>
+  <p>This demo is not an ABTA member and does not offer ABTA arbitration. A production business would state its actual dispute-resolution arrangement here.</p>
 
   <h2>12. Data Protection</h2>
   <p>We process personal data in accordance with our <a href="/?page=privacy">Privacy Policy</a> and applicable UK data protection legislation. By booking with us, you consent to the processing of data as described therein.</p>

@@ -118,7 +118,7 @@
               <summary>Why should I book through you rather than directly?</summary>
               <div class="faq-answer">
                 <p>Because we know things you can't find on a website. We've visited most of what we sell, we have long-standing relationships with the best operators worldwide, and we often secure rates and access that aren't available to the public. More importantly, if something goes wrong — a strike, a hotel closure, a health emergency — you have a single point of contact who will actually fix it.</p>
-                <p>You're also fully protected under ABTA and ATOL, meaning your money is safe regardless of what happens to us or any of our suppliers.</p>
+                <p>This is a demonstration application; it does not sell travel. It is not ABTA or ATOL protected, and no payment is taken.</p>
               </div>
             </details>
 
@@ -155,7 +155,7 @@
             <details class="faq-item">
               <summary>Is my payment secure?</summary>
               <div class="faq-answer">
-                <p>Yes. All card payments are processed through a PCI-DSS-compliant payment gateway — your card details are never stored on our servers. For added peace of mind, all bookings are ATOL protected, meaning your money is ringfenced even in the unlikely event that we were unable to trade.</p>
+                <p>No card payments are taken by this demo. A production implementation would use a PCI-DSS-compliant gateway and would not store card details on the application server.</p>
               </div>
             </details>
 
@@ -244,14 +244,14 @@
               <summary>What is ATOL protection and how does it apply to me?</summary>
               <div class="faq-answer">
                 <p>ATOL (Air Travel Organiser's Licence) is a UK government financial protection scheme administered by the Civil Aviation Authority. If a travel company holding an ATOL certificate ceases trading, customers who have booked a package holiday including flights are protected — their money is refunded, or (if already travelling) arrangements are made to get them home.</p>
-                <p>Meridian Horizons holds a valid ATOL certificate. When you book a package that includes flights with us, you are protected under this scheme and will receive an ATOL Certificate as part of your booking confirmation.</p>
+                <p>This demo does not hold an ATOL certificate. The page is illustrative only; a real travel business would display its actual ATOL number and certificate terms.</p>
               </div>
             </details>
 
             <details class="faq-item">
               <summary>What is ABTA and what does it mean for me?</summary>
               <div class="faq-answer">
-                <p>ABTA is the UK's largest travel association. ABTA membership means we are bound by a Code of Conduct governing how we sell and deliver holidays. If a dispute cannot be resolved directly, ABTA offers an independent arbitration scheme as an alternative to court action. It gives you an additional layer of confidence when booking with us.</p>
+                <p>This demo is not an ABTA member. The page is illustrative only; a real travel business would display its actual membership details.</p>
               </div>
             </details>
 
