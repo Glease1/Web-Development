@@ -9,14 +9,14 @@ A framework-free travel booking application — PHP 8.3, SQLite, session-based b
 | Backend | PHP 8.3 — front-controller routing, PDO, session management, CSRF protection |
 | Database | SQLite 3 via PDO — zero-config, auto-created and seeded on first run |
 | Frontend | Vanilla CSS design system (Playfair Display + Inter), vanilla JS price calculator |
-| Deployment | Ansible `website` role → systemd service on port 8080 |
+| Deployment | PHP's built-in server for local use; no production deployment is included |
 
 ## Getting started
 
 Requires PHP 8.1+ with the `pdo_sqlite` extension (enabled by default in standard PHP builds). `mbstring` is optional; the one-letter avatar uses a fallback.
 
 ```bash
-cd "Website Example"
+cd Web-Development
 php -S localhost:8080 -t public
 ```
 
@@ -32,7 +32,7 @@ MERIDIAN_DB_PATH=/var/lib/meridian/meridian.db php -S localhost:8080 -t public
 
 | Role  | Email               | Password |
 |-------|---------------------|----------|
-| Admin | admin@meridian.test | admin123 |
+| Admin (demo only) | admin@meridian.test | admin123 |
 | User  | demo@meridian.test  | demo123  |
 
 > Development-only seed accounts. Never deploy with these credentials.
@@ -112,9 +112,9 @@ rm "../meridian-data/meridian.db"
 
 ## Deployment
 
-The site is deployed automatically by the Ansible `website` role in this repository. The role installs PHP 8.3, creates a `/opt/meridian` symlink, creates `~/meridian-data`, and manages a systemd service (`meridian`) that serves `public/` on port 8080 with `MERIDIAN_DB_PATH` pointing outside the web root.
+There is no deployment automation in this repository. The role installs PHP 8.3, creates a `/opt/meridian` symlink, creates `~/meridian-data`, and manages a systemd service (`meridian`) that serves `public/` on port 8080 with `MERIDIAN_DB_PATH` pointing outside the web root.
 
-See [Ansible/readme.md](../Ansible/readme.md) for full deployment instructions.
+The only automated check is `.github/workflows/php.yml`, which lints every PHP file on push.
 
 ## Production hardening notes
 
@@ -123,3 +123,9 @@ See [Ansible/readme.md](../Ansible/readme.md) for full deployment instructions.
 - Replace the seed admin account with a proper setup CLI before any public-facing deployment.
 - Move from `php -S` to nginx + PHP-FPM with `public/` as the document root; the built-in server is for local development only.
 - Add login rate limiting and a backup/restore process before exposing the app.
+
+## Demo behaviour that is not implemented
+
+- **Password reset is simulated.** The page validates the address and flashes a confirmation; it issues no token and sends no message. There is no mail transport in this project.
+- **"Keep me signed in"** is a visual control only — there is no persistent-login cookie.
+- **Demo accounts are seeded** (`admin@meridian.test` / `admin123`) so the admin panel can be reviewed. Remove them, or change the password, before hosting this anywhere.
